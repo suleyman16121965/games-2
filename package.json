@@ -1,8 +1,10 @@
 {
   "name": "games",
   "version": "1.0.0",
-  "start": "node server.js",
   "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
     "ws": "^8.13.0"
   }

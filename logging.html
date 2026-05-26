@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Backgammon Login</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    padding-top: 60px;
+  }
+
+  .login-box {
+    background: white;
+    padding: 25px;
+    width: 350px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  }
+
+  label {
+    font-weight: bold;
+    display: block;
+    margin-top: 15px;
+  }
+
+  input[type="text"], select {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    border-radius: 5px;
+    border: 1px solid #aaa;
+  }
+
+  .role-box label {
+    font-weight: normal;
+    margin-right: 15px;
+  }
+
+  button {
+    margin-top: 20px;
+    width: 100%;
+    padding: 10px;
+    background: #0078ff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background: #005fcc;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="login-box">
+
+  <h2>Backgammon Login</h2>
+
+  <label for="username">Player Name:</label>
+  <input type="text" id="username" required>
+
+  <label for="city">City:</label>
+  <input type="text" id="city" required>
+
+  <label>Select Role:</label>
+  <div class="role-box">
+    <label><input type="radio" name="role" value="player1" id="r1"> Player 1</label>
+    <label><input type="radio" name="role" value="player2" id="r2"> Player 2</label>
+  </div>
+
+  <label for="room">Select Room:</label>
+  <select id="room" required>
+    <option value="room1">Room 1</option>
+    <option value="room2">Room 2</option>
+    <option value="room3">Room 3</option>
+    <option value="room4">Room 4</option>
+    <option value="room5">Room 5</option>
+  </select>
+
+  <button onclick="startGame()">Start Game</button>
+
+</div>
+
+<script>
+// URL'den role parametresini al
+const urlParams = new URLSearchParams(window.location.search);
+const incomingRole = urlParams.get("role");
+
+// Eğer URL'de role varsa otomatik seç
+if (incomingRole === "player2") {
+  document.getElementById("r2").checked = true;
+} else {
+  document.getElementById("r1").checked = true;
+}
+
+function startGame() {
+  const username = document.getElementById("username").value.trim();
+  const city = document.getElementById("city").value.trim();
+  const room = document.getElementById("room").value;
+  const role = document.querySelector('input[name="role"]:checked').value;
+
+  if (!username || !city) {
+    alert("Please fill all fields.");
+    return;
+  }
+
+  const url = `frame.html?username=${encodeURIComponent(username)}&city=${encodeURIComponent(city)}&room=${room}&role=${role}`;
+  window.location.href = url;
+}
+</script>
+
+</body>
+</html>

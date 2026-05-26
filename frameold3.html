@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>SAHRABA Oyun Çerçevesi</title>
+
+  <!-- Firebase SDK -->
+  
+  <script>
+  // 1) URL parametrelerini oku (EN ÜSTE)
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get("username") || "Unknown";
+  const city = urlParams.get("city") || "Unknown";
+  const role = urlParams.get("role") || "player1";
+  const room = urlParams.get("room") || "default";
+  
+</script>
+<!-- 2) Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+ 
+
+  <script>
+    // Firebase config
+    var firebaseConfig = {
+      apiKey: "AIzaSyB6gNfOC6uJWdjYiphX_QrWEE6_B736l7c",
+      authDomain: "sahrababackgammon.firebaseapp.com",
+      databaseURL: "https://sahrababackgammon-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "sahrababackgammon",
+      storageBucket: "sahrababackgammon.appspot.com",
+      messagingSenderId: "664811098675",
+      appId: "1:664811098675:web:8f3df631a3ea686f7b4946",
+      measurementId: "G-550BHKB4RD"
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
+
+  <style>
+    body { margin: 0; display: flex; height: 100vh; font-family: sans-serif; }
+    #chatPanel {
+      width: 280px;
+      background: #f4f4f4;
+      border-right: 2px solid #ccc;
+      padding: 10px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+    }
+    #playerInfo { white-space: pre-line; font-weight: bold; margin-bottom: 10px; }
+    #chatMessages {
+      flex: 1;
+      overflow-y: auto;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      padding: 5px;
+      background: #fff;
+    }
+    #chatInput { width: 100%; box-sizing: border-box; margin-bottom: 5px; }
+    #gameFrame {
+      flex: 1;
+      border: none;
+      width: 100%;
+      height: 100%;
+    }
+    button { padding: 6px; background: #333; color: #fff; border: none; cursor: pointer; }
+    button:hover { background: #555; }
+    .exitBtn { margin-top:10px; background:#c00; }
+  </style>
+  
+ 
+<script>
+const socket = new WebSocket("wss://sahraba-multiplayer.onrender.com/");
+  socket.addEventListener("open", () => {
+      console.log("✅ WebSocket bağlandı (Render)");
+  });
+
+  socket.addEventListener("message", (event) => {
+      console.log("📨 Sunucudan mesaj:", event.data);
+  });
+
+  socket.addEventListener("close", () => {
+      console.log("❌ WebSocket kapandı");
+  });
+
+  socket.addEventListener("error", (err) => {
+      console.error("⚠️ WebSocket hatası:", err);
+  });
+</script>
+
+</head>
+
+<body>
+  <!-- Sol sohbet paneli -->
+  <div id="chatPanel">
+    <h3>Sohbet</h3>
+    <div id="playerInfo"></div>
+    <div id="chatMessages"></div>
+    <input type="text" id="chatInput" placeholder="Mesaj yaz...">
+    <button onclick="sendChat()">Gönder</button>
+    <button class="exitBtn" onclick="exitGame()">Oyunu Kapat</button>
+  </div>
+
+  <!-- Oyun sahnesi -->
+  <iframe id="gameFrame"></iframe>
+
+  <script>
+   
+    // Firebase path'leri
+    const chatRef = firebase.database().ref("rooms/" + room + "/chat");
+    const playersRef = firebase.database().ref("rooms/" + room + "/players");
+
+    let playerKey = null;
+
+    window.addEventListener("DOMContentLoaded", () => {
+      // Oyuncu kaydı
+      playerKey = playersRef.push({
+        user: username,
+        city: city,
+        joinedAt: Date.now()
+      }).key;
+      playersRef.child(playerKey).onDisconnect().remove();
+
+      // Oyuncu listesi dinle
+      playersRef.on("value", snapshot => {
+        const players = snapshot.val();
+        let list = `Oda: ${room}\nOyuncular:\n`;
+        if (players) {
+          for (let key in players) {
+            list += `- ${players[key].user} (${players[key].city})\n`;
+          }
+        } else {
+          list += "Şu anda kimse yok.";
+        }
+        document.getElementById("playerInfo").innerText = list;
+      });
+
+      // Sohbet mesajlarını dinle
+      const chatBox = document.getElementById("chatMessages");
+      chatRef.on("child_added", snapshot => {
+        const data = snapshot.val();
+        const newMsg = document.createElement("div");
+        newMsg.innerHTML = `<strong>${data.user}:</strong> ${data.message}`;
+        chatBox.appendChild(newMsg);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      });
+      // Oyun iframe’ini DOĞRU parametrelerle aç
+
+
+let player1 = "Waiting";
+let player2 = "Waiting";
+
+if (role === "player1") {
+    player1 = username;
+}
+
+if (role === "player2") {
+    player2 = username;
+}
+document.getElementById("gameFrame").src = "https://sahraba.com/backgammon/index.html" + "?player1=" + encodeURIComponent(player1) + "&player2=" + encodeURIComponent(player2) + "&room=" + encodeURIComponent(room);  
+
+    });
+
+    // Mesaj gönder
+    function sendChat() {
+      const input = document.getElementById("chatInput");
+      const msg = input.value;
+      if (msg.trim() === "") return;
+
+      chatRef.push({
+        user: `${username} (${city})`,
+        message: msg,
+        timestamp: Date.now()
+      });
+
+      input.value = "";
+    }
+
+    // Oyunu kapat
+    function exitGame() {
+      document.getElementById("gameFrame").src = "https://sahraba.com/games/";
+      if (playersRef && playerKey) {
+        playersRef.child(playerKey).remove();
+      }
+    }
+  </script>
+</body>
+</html>

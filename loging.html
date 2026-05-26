@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      background-image: url('https://sahraba.com/wp-content/backgammon/sprites/bg_menu.jpg?_t=1758987631'); /* Replace with your image path */
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: sans-serif;
+    }
+
+    form {
+      background: rgba(255, 255, 255, 0.85);
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: #333;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #555;
+    }
+  </style>
+</head>
+<body>
+  <form action="frame.html" method="GET">
+    <h2>Enter the Ritual Space</h2>
+    <label for="username">Player Name:</label>
+    <input type="text" id="username" name="username" required>
+
+    <label for="city">City:</label>
+<label>
+  <input type="radio" name="role" value="player1" checked>
+  Player 1
+</label>
+
+<label>
+  <input type="radio" name="role" value="player2">
+  Player 2
+</label>
+
+    <input type="text" id="city" name="city" required>
+<select id="room" name="room" required>
+  <option value="room1">Room 1</option>
+  <option value="room2">Room 2</option>
+  <option value="room3">Room 3</option>
+  <option value="room4">Room 4</option>
+  <option value="room5">Room 5</option>
+</select>
+<script>
+document.querySelector("form").addEventListener("submit", function() {
+  const role = document.querySelector('input[name="role"]:checked').value;
+  document.getElementById("roleField").value = role;
+});
+</script>
+
+</form>
+
+<input type="hidden" id="roleField" name="role">
+    <button type="submit">Enter Game</button>
+    <script>
+function enterGame() {
+  const name = document.getElementById("playerName").value;
+  const city = document.getElementById("playerCity").value;
+  const room = "room1"; // You can change this or let the user choose
+<label for="room">Select Room:</label>
+
+
+  if (!name || !city) {
+    alert("Please enter your name and city.");
+    return;
+  }
+
+  // Redirect to frame.html with login info
+  window.location.href = `frame.html?username=${encodeURIComponent(name)}&city=${encodeURIComponent(city)}&room=${room}`;
+}
+</script>
+
+  </form>
+</body>
+</html>

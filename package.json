@@ -1,7 +1,7 @@
 {
-  "name": "backgammon-server",
+  "name": "games",
   "version": "1.0.0",
-  "main": "server.js",
+  "start": "node server.js",
   "type": "module",
   "dependencies": {
     "ws": "^8.13.0"

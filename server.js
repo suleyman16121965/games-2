@@ -1,5 +1,9 @@
 import http from "http";
 import { WebSocketServer } from "ws";
+const server = http.createServer((req, res) => {
+  res.writeHead(200);
+  res.end("Server is running");
+});
 
 const server = http.createServer();
 const wss = new WebSocketServer({ server });

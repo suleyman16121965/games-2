@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Backgammon Connection Log</title>
+  <style>
+    body {
+      background: #111;
+      color: #0f0;
+      font-family: monospace;
+      padding: 20px;
+    }
+    #log {
+      white-space: pre-line;
+      background: #000;
+      padding: 15px;
+      border-radius: 10px;
+      height: 400px;
+      overflow-y: auto;
+      border: 1px solid #0f0;
+    }
+  </style>
+</head>
+<body>
+
+<h2>WebSocket Log Viewer</h2>
+<div id="log">Connecting...</div>
+
+<script>
+function log(msg) {
+  document.getElementById("log").innerText += "\n" + msg;
+}
+
+// URL parametrelerini al
+const params = new URLSearchParams(window.location.search);
+const username = params.get("username") || "Player";
+const city = params.get("city") || "Unknown";
+const room = params.get("room") || "room1";
+const role = params.get("role") || "player1";
+
+// WEBSOCKET ADRESİN
+const ws = new WebSocket("wss://sahraba-multiplayer.onrender.com");
+
+ws.onopen = () => {
+  log("CONNECTED to WebSocket");
+
+  // Odaya giriş mesajı
+  const joinMsg = {
+    type: "join",
+    room: room,
+    username: username,
+    city: city,
+    role: role
+  };
+
+  ws.send(JSON.stringify(joinMsg));
+  log("JOIN SENT → " + JSON.stringify(joinMsg));
+};
+
+ws.onmessage = (event) => {
+  log("SERVER → " + event.data);
+
+  try {
+    const msg = JSON.parse(event.data);
+
+    // Eğer iki oyuncu hazırsa oyuna geç
+    if (msg.type === "both_ready") {
+      log("Both players ready → Redirecting to game...");
+      window.location.href = `frame.html?username=${username}&city=${city}&room=${room}&role=${role}`;
+    }
+  } catch (e) {
+    log("Parse error: " + e);
+  }
+};
+
+ws.onerror = (err) => {
+  log("ERROR: " + err);
+};
+
+ws.onclose = () => {
+  log("DISCONNECTED");
+};
+</script>
+
+</body>
+</html>

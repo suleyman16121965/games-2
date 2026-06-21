@@ -12,7 +12,7 @@ let rooms = {};
 // }
 
 // --------------------------------------------------
-// BROADCAST (DÜZELTİLDİ — ARTIK TÜM DATA GİDİYOR)
+// BROADCAST
 // --------------------------------------------------
 function broadcast(room, data) {
     if (!rooms[room]) return;
@@ -55,6 +55,22 @@ ws.on("connection", (ws) => {
                     role: p.role
                 }))
             });
+
+            // --------------------------------------------------
+            // ⭐ START MESAJI — Waiting sorununu çözen kısım
+            // --------------------------------------------------
+            if (rooms[room].length === 2) {
+                const p1 = rooms[room][0];
+                const p2 = rooms[room][1];
+
+                broadcast(room, {
+                    type: "start",
+                    player1: p1.username,
+                    player2: p2.username
+                });
+
+                console.log(`START gönderildi → ${room}: ${p1.username} vs ${p2.username}`);
+            }
         }
 
         // --------------------------------------------------

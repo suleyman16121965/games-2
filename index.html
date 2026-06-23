@@ -7,11 +7,14 @@
   <title>Backgammon Multiplayer</title>
   <!-- BURAYA EKLE --> 
   <script>
- const urlParams = new URLSearchParams(window.location.search);
- window.player1Name = urlParams.get("player1") || "Player 1";
- window.player2Name = urlParams.get("player2") || "Player 2";
- window.roomName = urlParams.get("room") || "ROOM";
- window.room = urlParams.get("room");   // ← BUNU EKLE
+const urlParams = new URLSearchParams(window.location.search);
+
+// Frame.html → index.html’e gönderilen parametreler
+window.player1Name = urlParams.get("player1") || "Player1";
+window.player2Name = urlParams.get("player2") || "Player2";
+window.roomName    = urlParams.get("room")    || "ROOM";
+</script>
+// ← BUNU EKLE
 </script>  
   <!-- EKLEME BİTTİ -->
 <script src="js/lib/createjs.min.js"></script>
@@ -87,39 +90,53 @@
   <script src="js/CMoveTimeController.js"></script>
   <script src="js/CButMenu.js"></script>
     <!-- 🌐 WebSocket bağlantısı (Render sunucusuna) -->
-  <script>
-   const socket = new WebSocket("wss://games-2-1.onrender.com");
+<script>
+const socket = new WebSocket("wss://games-2-1.onrender.com/");
+
 socket.addEventListener("open", () => {
     console.log("✅ WebSocket bağlandı (Render)");
 
     socket.send(JSON.stringify({
         type: "join",
         room: window.roomName,
-        player: window.player1Name || window.player2Name
+        player: window.username   // ✔ DOĞRU OLAN BU
     }));
 });
-    socket.addEventListener("message", (event) => {
+
+socket.addEventListener("message", (event) => {
     console.log("📩 Sunucudan mesaj geldi:", event.data);
 
     const data = JSON.parse(event.data);
 
-    // ⭐ MOVE RECEIVE BURAYA
     if (data.type === "move") {
         console.log("Gelen hamle:", data.move);
         s_oGame.remoteMove(data.move.from, data.move.to);
     }
 
-    // diğer mesaj türleri (start, chat vs.)
+
+    // ⭐ BURAYA EKLE — START mesajı geldiğinde Waiting kaybolsun
+    if (data.type === "start") {
+    window.player1Name = data.player1;
+    window.player2Name = data.player2;
+
+    // Yeni doğru fonksiyonlar
+    if (s_oInterface && s_oInterface.setPlayer1 && s_oInterface.setPlayer2) {
+        s_oInterface.setPlayer1(window.player1Name);
+        s_oInterface.setPlayer2(window.player2Name);
+    }
+}
 });
 
-    socket.addEventListener("close", () => {
-      console.log("❌ WebSocket bağlantısı kapandı");
-    });
 
-    socket.addEventListener("error", (err) => {
-      console.error("⚠️ WebSocket hatası:", err);
-    });
-  </script>
+socket.addEventListener("close", () => {
+    console.log("❌ WebSocket bağlantısı kapandı");
+});
+
+socket.addEventListener("error", (err) => {
+    console.error("⚠️ WebSocket hatası:", err);
+});
+</script>
+
 </head>
 
 <body ondragstart="return false;" ondrop="return false;">
@@ -163,28 +180,6 @@ socket.addEventListener("open", () => {
     <p class="orientation-msg-text">Please rotate your device</p>
   </div>
   <div id="block_game" style="position: fixed; background-color: transparent; top: 0; left: 0; width: 100%; height: 100%; display:none"></div>
-  socket.onmessage = function (event) {
-    const data = JSON.parse(event.data);
-
-    // START mesajı geldiğinde isimleri güncelle
-    if (data.type === "start") {
-
-        // Sunucudan gelen isimleri al
-        window.player1Name = data.player1;
-        window.player2Name = data.player2;
-
-        console.log("START → Player1:", window.player1Name, "Player2:", window.player2Name);
-
-        // Oyun ekranındaki isimleri güncelle
-        if (s_oInterface && s_oInterface.setPlayersInfo) {
-            s_oInterface.setPlayersInfo(window.player1Name, window.player2Name);
-        }
-
-        // Chat bölümündeki isimleri güncelle
-        if (typeof updateChatNames === "function") {
-            updateChatNames(window.player1Name, window.player2Name);
-        }
-    }
 
     // Diğer mesaj türleri burada devam eder...
 };

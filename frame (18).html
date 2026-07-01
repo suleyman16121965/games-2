@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SAHRABA Game Frame</title>
+
+  <style>
+    body { margin: 0; display: flex; height: 100vh; font-family: sans-serif; }
+    #chatPanel {
+      width: 280px;
+      background: #f4f4f4;
+      border-right: 2px solid #ccc;
+      padding: 10px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+    }
+    #playerInfo { white-space: pre-line; font-weight: bold; margin-bottom: 10px; }
+    #chatMessages {
+      flex: 1;
+      overflow-y: auto;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      padding: 5px;
+      background: #fff;
+    }
+    #chatInput { width: 100%; box-sizing: border-box; margin-bottom: 5px; }
+    #gameFrame {
+      flex: 1;
+      border: none;
+      width: 100%;
+      height: 100%;
+    }
+    button { padding: 6px; background: #333; color: #fff; border: none; cursor: pointer; }
+    button:hover { background: #555; }
+    .exitBtn { margin-top:10px; background:#c00; }
+  </style>
+
+  <script>
+    // Read URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const username = urlParams.get("username") || "Unknown";
+    const city = urlParams.get("city") || "Unknown";
+    const role = urlParams.get("role") || "player1";
+    const room = urlParams.get("room") || "default";
+
+    // Connect to WebSocket server
+    const socket = new WebSocket("wss://games-2-1.onrender.com//");
+
+    socket.addEventListener("open", () => {
+      console.log("Connected to WebSocket server");
+
+      socket.send(JSON.stringify({
+        type: "join",
+        room: room,
+        username: username,
+        city: city,
+        role: role
+      }));
+    });
+
+    socket.addEventListener("message", (event) => {
+      const data = JSON.parse(event.data);
+
+      // Player list update
+      if (data.type === "players") {
+        let list = `Room: ${room}\nPlayers:\n`;
+        data.players.forEach(p => {
+          list += `- ${p.username} (${p.city})\n`;
+        });
+        document.getElementById("playerInfo").innerText = list;
+      }
+
+      // Chat message
+      if (data.type === "chat") {
+        addChatMessage(`${data.username}: ${data.message}`);
+      }
+    });
+
+    function addChatMessage(msg) {
+      const chatBox = document.getElementById("chatMessages");
+      const newMsg = document.createElement("div");
+      newMsg.innerText = msg;
+      chatBox.appendChild(newMsg);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function sendChat() {
+      const input = document.getElementById("chatInput");
+      const msg = input.value.trim();
+      if (msg === "") return;
+
+      socket.send(JSON.stringify({
+        type: "chat",
+        room: room,
+        username: username,
+        message: msg
+      }));
+
+      input.value = "";
+    }
+
+    function exitGame() {
+      document.getElementById("gameFrame").src = "https://sahraba.com/games/";
+      socket.close();
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      let player1 = "Waiting";
+      let player2 = "Waiting";
+
+      if (role === "player1") player1 = username;
+      if (role === "player2") player2 = username;
+
+      document.getElementById("gameFrame").src =
+        "https://sahraba.com/backgammon/index.html" +
+        "?player1=" + encodeURIComponent(player1) +
+        "&player2=" + encodeURIComponent(player2) +
+        "&room=" + encodeURIComponent(room);
+    });
+  </script>
+
+</head>
+
+<body>
+  <div id="chatPanel">
+    <h3>Chat</h3>
+    <div id="playerInfo"></div>
+    <div id="chatMessages"></div>
+    <input type="text" id="chatInput" placeholder="Type a message...">
+    <button onclick="sendChat()">Send</button>
+    <button class="exitBtn" onclick="exitGame()">Exit Game</button>
+  </div>
+
+  <iframe id="gameFrame"></iframe>
+</body>
+</html>
